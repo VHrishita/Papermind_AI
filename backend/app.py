@@ -41,7 +41,35 @@ os.makedirs("exports", exist_ok=True)
 
 # In-memory store for uploaded paper data (reset on server restart)
 paper_store = {}  # { paper_id: { text, filename, sections, keywords } }
+def reload_saved_papers():
+    """
+    Reload previously uploaded PDFs from UPLOAD_FOLDER
+    after backend restart.
+    """
+    for filename in os.listdir(app.config["UPLOAD_FOLDER"]):
+        if filename.endswith(".pdf"):
+            filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
 
+            try:
+                text = extract_text_from_pdf(filepath)
+
+                if not text.strip():
+                    continue
+
+                paper_id = filename.replace(".pdf", "").replace(" ", "_")
+                sections = detect_sections(text)
+                keywords = extract_keywords(text, top_n=20)
+
+                paper_store[paper_id] = {
+                    "text": text,
+                    "filename": filename,
+                    "filepath": filepath,
+                    "sections": sections,
+                    "keywords": keywords,
+                }
+
+            except Exception as e:
+                print(f"Failed to reload {filename}: {e}")
 
 def allowed_file(filename):
     """Check if file extension is allowed"""
@@ -348,7 +376,7 @@ def list_papers():
         })
     return jsonify({"papers": papers})
 
-
+reload_saved_papers()
 # ── Run ────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     print("=" * 50)
