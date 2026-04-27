@@ -15,8 +15,7 @@ import {
  */
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const API_BASE = "http://localhost:5000/api";
-
+const API_BASE = "https://papermind-ai-backend-d6pz.onrender.com";
 // ── State ─────────────────────────────────────────────────────────────────────
 let uploadedPapers = [];          // Array of { paper_id, filename, word_count }
 let activePaperId = null;         // Currently selected paper
