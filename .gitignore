@@ -1,6 +1,6 @@
 venv/
 __pycache__/
-*.pyc
-backend/uploads/
-backend/exports/
+uploads/
 .env
+*.pyc
+.DS_Store

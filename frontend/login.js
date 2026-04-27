@@ -26,7 +26,7 @@ window.signup = async function () {
   try {
     await createUserWithEmailAndPassword(auth, email, password);
     alert("Signup successful!");
-    window.location.href = "index.html";
+    window.location.href = "app.html";
   } catch (error) {
     alert(error.message);
   }
@@ -40,7 +40,7 @@ window.login = async function () {
   try {
     await signInWithEmailAndPassword(auth, email, password);
     alert("Login successful!");
-    window.location.href = "index.html";
+    window.location.href = "app.html";
   } catch (error) {
     alert(error.message);
   }

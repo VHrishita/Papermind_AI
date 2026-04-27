@@ -175,6 +175,25 @@ def answer_question(text: str, question: str, top_k: int = 5) -> str:
 
     intent = detect_intent(question)
     ranked_pairs = []
+    question_lower = question.lower()
+
+    if "objective" in question_lower or "aim" in question_lower:
+        question += " purpose goal motivation"
+
+    elif "novelty" in question_lower or "new" in question_lower:
+        question += " contribution proposed method improvement advantage"
+
+    elif "method" in question_lower or "approach" in question_lower:
+        question += " methodology technique model framework"
+
+    elif "result" in question_lower or "performance" in question_lower:
+        question += " outcomes findings accuracy evaluation"
+
+    elif "future" in question_lower:
+        question += " future work limitations improvements"
+
+    elif "problem" in question_lower:
+        question += " issue challenge research problem motivation"
 
     # ── Strategy 1: SBERT (best quality) ──────────────────────────────────────
     if USE_SBERT and sbert_model:

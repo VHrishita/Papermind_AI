@@ -146,6 +146,7 @@ def summarize_text(text: str, ratio: float = 0.25) -> str:
     Generate a paragraph summary using combined TF-IDF + TextRank.
     ratio = fraction of sentences to include (0.25 = top 25%)
     """
+    text = text[:8000]
     sentences = tokenize_sentences(text)
     if len(sentences) < 3:
         return text[:1000]  # Return raw text if too short
@@ -168,6 +169,7 @@ def extract_key_points(text: str, n_points: int = 7) -> list:
     Extract key bullet points from text.
     Returns list of strings.
     """
+    text = text[:8000]
     sentences = tokenize_sentences(text)
     if not sentences:
         return ["Could not extract key points."]
@@ -191,6 +193,7 @@ def one_line_summary(text: str) -> str:
     Generate a single-sentence abstract-style summary.
     Picks the single highest-scored sentence.
     """
+    text = text[:8000]
     sentences = tokenize_sentences(text)
     if not sentences:
         return "Unable to generate summary."

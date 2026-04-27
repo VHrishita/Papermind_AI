@@ -63,16 +63,40 @@ def clean_extracted_text(text: str) -> str:
     """Clean raw PDF extracted text"""
     if not text:
         return ""
+
+    import re
+
     # Normalize whitespace
     text = re.sub(r"\r\n", "\n", text)
     text = re.sub(r"\n{4,}", "\n\n", text)
     text = re.sub(r"[ \t]{2,}", " ", text)
-    # Remove page numbers (standalone digits on a line)
+
+    # Remove standalone page numbers
     text = re.sub(r"^\s*\d+\s*$", "", text, flags=re.MULTILINE)
+
+    # Remove common journal header/footer junk
+    text = re.sub(r"IJNRD.*?www\.ijnrd\.org", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"ISSN:.*?\d+", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"Volume\s+\d+.*?Issue\s+\d+", "", text, flags=re.IGNORECASE)
+
+    # Remove short page labels like j270, j271
+    text = re.sub(r"\bj\d+\b", "", text, flags=re.IGNORECASE)
+
+    # Remove repeated figure labels and noisy section labels
+    text = re.sub(r"BLOCK DIAGRAM", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"WORKING PRINCIPLE", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"FIG\.?\s*\d*", "", text, flags=re.IGNORECASE)
+
     # Remove non-printable characters
     text = re.sub(r"[^\x09\x0A\x0D\x20-\x7E]", " ", text)
-    return text.strip()
 
+    # Remove very tiny broken words caused by bad extraction
+    text = re.sub(r"\b[a-zA-Z]{1,2}\b", "", text)
+
+    # Remove extra spaces again after cleaning
+    text = re.sub(r"\s+", " ", text)
+
+    return text.strip()
 
 # ── Section Detection ───────────────────────────────────────────────────────────
 
@@ -219,11 +243,34 @@ def extract_keywords(text: str, top_n: int = 15) -> list:
     rake_kws = extract_keywords_rake(text, top_n=top_n // 2)
 
     # Combine and deduplicate
+        # Combine and clean keywords
+    bad_words = {
+        "use", "make", "using", "used", "data", "res", "eng",
+        "sci", "inf", "comput", "paper", "study", "result",
+        "method", "system", "work", "model", "models",
+        "perwej", "www", "ij", "issue", "volume"
+    }
+
     combined = []
     seen = set()
+
     for kw in tfidf_kws + rake_kws:
         kw_clean = kw.strip().lower()
-        if kw_clean not in seen and len(kw_clean) > 2:
+
+        # Remove short/broken words
+        if len(kw_clean) < 4:
+            continue
+
+        # Remove generic useless words
+        if kw_clean in bad_words:
+            continue
+
+        # Remove numbers
+        if kw_clean.isdigit():
+            continue
+
+        # Remove duplicates
+        if kw_clean not in seen:
             seen.add(kw_clean)
             combined.append(kw_clean)
 
@@ -328,7 +375,17 @@ def simplify_text(text: str, level: str = "beginner", max_chars: int = 3000) -> 
     config = LEVEL_CONFIGS.get(level, LEVEL_CONFIGS["beginner"])
 
     # Extract most important content (first 4000 chars)
-    working_text = text[:4000]
+    if level == "beginner":
+        working_text = text[:3000]
+
+    elif level == "student":
+        working_text = text[2000:7000]
+
+    elif level == "viva":
+        working_text = text[4000:9000]
+
+    else:
+        working_text = text[:4000]
 
     # Apply jargon replacement if configured
     if config["use_jargon_replace"]:

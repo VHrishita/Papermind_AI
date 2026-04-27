@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PaperMind - AI Research Paper Simplifier</title>
+<link rel="icon" type="image/png" href="logo.png" />
+  <!-- Fonts: Fraunces (display) + DM Sans (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- PDF.js for in-browser PDF preview -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <!-- Chart.js for visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════ SIDEBAR ═══ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-icon">⬡</span>
+    <span class="logo-text">Paper<em>Mind</em></span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <button class="nav-item active" data-panel="upload">
+      <span class="nav-icon">↑</span> Upload Papers
+    </button>
+    <button class="nav-item" data-panel="chat">
+      <span class="nav-icon">◎</span> Chat with Paper
+    </button>
+    <button class="nav-item" data-panel="summary">
+      <span class="nav-icon">≡</span> Summarize
+    </button>
+    <button class="nav-item" data-panel="simplify">
+      <span class="nav-icon">✦</span> Simplify
+    </button>
+    <button class="nav-item" data-panel="keywords">
+      <span class="nav-icon">#</span> Keywords
+    </button>
+    <button class="nav-item" data-panel="sections">
+      <span class="nav-icon">□</span> Sections
+    </button>
+    <button class="nav-item" data-panel="compare">
+      <span class="nav-icon">⇄</span> Compare Papers
+    </button>
+    <button class="nav-item" data-panel="visualize">
+      <span class="nav-icon">◈</span> Topic Graph
+    </button>
+    <button class="nav-item" data-panel="word2vec">
+      <span class="nav-icon">◉</span> Concept Explorer
+    </button>
+  </nav>
+
+  <!-- Uploaded papers list -->
+  <div class="sidebar-papers">
+    <p class="sidebar-section-label">Uploaded Papers</p>
+    <div id="paper-list">
+      <p class="empty-hint">No papers yet</p>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <span>PaperMind</span>
+  </div>
+</aside>
+
+<!-- ════════════════════════════════════════════ MAIN AREA ═══ -->
+<main class="main-area">
+
+  <!-- Top Bar -->
+  <header class="topbar">
+    <button class="hamburger" id="hamburger" aria-label="Toggle sidebar">☰</button>
+    <div class="topbar-title" id="topbar-title">Upload a Research Paper</div>
+    <div class="topbar-actions">
+      <button class="btn-export" id="btn-export" title="Export Report as PDF">
+        ↓ Export Report
+      </button>
+    </div>
+  </header>
+
+  <!-- ── PANEL: Upload ─────────────────────────────────────── -->
+  <section class="panel active" id="panel-upload">
+    <div class="panel-inner">
+      <h2 class="panel-title">Upload Research Papers</h2>
+      <p class="panel-subtitle">Drag &amp; drop or click to upload PDF files from IEEE, arXiv, Springer, ACM</p>
+
+      <div class="drop-zone" id="drop-zone">
+        <div class="drop-zone-content">
+          <div class="drop-icon">⬆</div>
+          <p class="drop-primary">Drop PDF files here</p>
+          <p class="drop-secondary">or click to browse</p>
+          <input type="file" id="file-input" accept=".pdf" multiple hidden />
+          <button class="btn-primary" onclick="document.getElementById('file-input').click()">
+            Choose Files
+          </button>
+        </div>
+      </div>
+
+      <!-- Upload results / status -->
+      <div id="upload-status" class="upload-status hidden"></div>
+
+      <!-- PDF Preview canvas -->
+      <div id="pdf-preview-area" class="hidden">
+        <h3 class="section-heading">PDF Preview</h3>
+        <div class="pdf-preview-container">
+          <canvas id="pdf-canvas"></canvas>
+        </div>
+        <div class="pdf-nav">
+          <button class="btn-secondary" id="pdf-prev">← Prev</button>
+          <span id="pdf-page-info">Page 1 of 1</span>
+          <button class="btn-secondary" id="pdf-next">Next →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PANEL: Chat ───────────────────────────────────────── -->
+  <section class="panel" id="panel-chat">
+    <div class="chat-layout">
+
+      <!-- Chat Messages -->
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-welcome">
+          <div class="chat-welcome-icon">◎</div>
+          <h3>Chat with your Research Paper</h3>
+          <p>Ask anything about the uploaded paper. I'll find answers from the content.</p>
+          <div class="example-questions">
+            <button class="example-q" onclick="setQuestion(this)">What is the main objective?</button>
+            <button class="example-q" onclick="setQuestion(this)">What dataset was used?</button>
+            <button class="example-q" onclick="setQuestion(this)">Explain the methodology</button>
+            <button class="example-q" onclick="setQuestion(this)">What are the limitations?</button>
+            <button class="example-q" onclick="setQuestion(this)">What are the key results?</button>
+            <button class="example-q" onclick="setQuestion(this)">What is the future scope?</button>
+            <button class="example-q" onclick="setQuestion(this)">Give me the title</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Input -->
+      <div class="chat-input-area">
+        <div class="paper-selector-row">
+          <label class="input-label">Paper:</label>
+          <select id="chat-paper-select" class="paper-select">
+            <option value="">— Select a paper —</option>
+          </select>
+        </div>
+        <div class="chat-input-row">
+          <textarea
+            id="chat-input"
+            class="chat-textarea"
+            placeholder="Ask a question about the paper..."
+            rows="2"
+          ></textarea>
+          <button class="btn-send" id="btn-send">
+            <span>▶</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PANEL: Summary ────────────────────────────────────── -->
+  <section class="panel" id="panel-summary">
+    <div class="panel-inner">
+      <h2 class="panel-title">Summarize Paper</h2>
+
+      <div class="control-row">
+        <select id="summary-paper-select" class="paper-select">
+          <option value="">— Select a paper —</option>
+        </select>
+        <div class="mode-toggle">
+          <button class="mode-btn active" data-mode="short">Paragraph</button>
+          <button class="mode-btn" data-mode="bullets">Bullets</button>
+          <button class="mode-btn" data-mode="oneliner">One-liner</button>
+        </div>
+        <button class="btn-primary" id="btn-summarize">Summarize</button>
+      </div>
+
+      <div id="summary-output" class="output-card hidden">
+        <div class="output-card-header">
+          <span class="output-badge">Summary</span>
+        </div>
+        <div id="summary-content" class="output-body"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PANEL: Simplify ───────────────────────────────────── -->
+  <section class="panel" id="panel-simplify">
+    <div class="panel-inner">
+      <h2 class="panel-title">Simplify Research Language</h2>
+      <p class="panel-subtitle">Convert complex academic writing into easy-to-understand language</p>
+
+      <div class="control-row">
+        <select id="simplify-paper-select" class="paper-select">
+          <option value="">— Select a paper —</option>
+        </select>
+        <div class="level-cards">
+          <label class="level-card">
+            <input type="radio" name="simplify-level" value="beginner" checked />
+            <span class="level-name">Beginner</span>
+            <span class="level-desc">Plain English, simple terms</span>
+          </label>
+          <label class="level-card">
+            <input type="radio" name="simplify-level" value="student" />
+            <span class="level-name">Student</span>
+            <span class="level-desc">Academic but accessible</span>
+          </label>
+          <label class="level-card">
+            <input type="radio" name="simplify-level" value="viva">
+            <span class="level-name">Viva Prep</span>
+            <span class="level-desc">Key points for defense</span>
+          </label>
+        </div>
+        <button class="btn-primary" id="btn-simplify">Simplify</button>
+      </div>
+
+      <div id="simplify-output" class="output-card hidden">
+        <div class="output-card-header">
+          <span class="output-badge">Simplified Text</span>
+        </div>
+        <div id="simplify-content" class="output-body"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PANEL: Keywords ───────────────────────────────────── -->
+  <section class="panel" id="panel-keywords">
+    <div class="panel-inner">
+      <h2 class="panel-title">Keyword Extraction</h2>
+
+      <div class="control-row">
+        <select id="keywords-paper-select" class="paper-select">
+          <option value="">— Select a paper —</option>
+        </select>
+        <button class="btn-primary" id="btn-keywords">Extract Keywords</button>
+      </div>
+
+      <div id="keywords-output" class="hidden">
+        <h3 class="section-heading">Top Keywords</h3>
+        <div id="keywords-cloud" class="keywords-cloud"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PANEL: Sections ───────────────────────────────────── -->
+  <section class="panel" id="panel-sections">
+    <div class="panel-inner">
+      <h2 class="panel-title">Section Detection</h2>
+
+      <div class="control-row">
+        <select id="sections-paper-select" class="paper-select">
+          <option value="">— Select a paper —</option>
+        </select>
+        <button class="btn-primary" id="btn-sections">Detect Sections</button>
+      </div>
+
+      <div id="sections-output" class="sections-grid hidden"></div>
+    </div>
+  </section>
+
+  <!-- ── PANEL: Compare ────────────────────────────────────── -->
+  <section class="panel" id="panel-compare">
+    <div class="panel-inner">
+      <h2 class="panel-title">Compare Papers</h2>
+      <p class="panel-subtitle">Upload 2+ papers and compare their objectives, methods, results, and more</p>
+
+      <div class="control-row">
+        <div id="compare-paper-checkboxes" class="checkbox-group">
+          <p class="empty-hint">Upload papers first</p>
+        </div>
+        <button class="btn-primary" id="btn-compare">Compare</button>
+      </div>
+
+      <div id="compare-output" class="compare-grid hidden"></div>
+    </div>
+  </section>
+
+  <!-- ── PANEL: Visualize ──────────────────────────────────── -->
+  <section class="panel" id="panel-visualize">
+    <div class="panel-inner">
+      <h2 class="panel-title">Topic Cluster Visualization</h2>
+      <p class="panel-subtitle">2D PCA map of topic clusters across your uploaded papers</p>
+
+      <div class="control-row">
+        <button class="btn-primary" id="btn-visualize">Generate Map</button>
+      </div>
+
+      <div id="visualize-output" class="hidden">
+        <div class="chart-container">
+          <canvas id="topic-chart" width="700" height="400"></canvas>
+        </div>
+        <p id="pca-variance-info" class="chart-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PANEL: Word2Vec ───────────────────────────────────── -->
+  <section class="panel" id="panel-word2vec">
+    <div class="panel-inner">
+      <h2 class="panel-title">Concept Explorer</h2>
+      <p class="panel-subtitle">Discover semantically related terms using Word2Vec</p>
+
+      <div class="control-row">
+        <select id="w2v-paper-select" class="paper-select">
+          <option value="">— Select a paper —</option>
+        </select>
+        <input type="text" id="w2v-term" class="text-input" placeholder="Enter a term (e.g. robot, sensor, model)" />
+        <button class="btn-primary" id="btn-w2v">Explore</button>
+      </div>
+
+      <div id="w2v-output" class="hidden">
+        <h3 class="section-heading">Related Concepts for "<span id="w2v-query-display"></span>"</h3>
+        <div id="w2v-results" class="w2v-results"></div>
+      </div>
+    </div>
+  </section>
+<footer class="footer">
+  Built by Vempali Hrishita • PaperMind AI Research 
+</footer>
+</main>
+
+<!-- ═════════════════════════════════════ LOADING OVERLAY ═══ -->
+<div class="loading-overlay hidden" id="loading-overlay">
+  <div class="loading-card">
+    <div class="loading-spinner"></div>
+    <p id="loading-text">Processing...</p>
+  </div>
+</div>
+
+<!-- ═════════════════════════════════════════════ TOAST ═══ -->
+<div class="toast hidden" id="toast"></div>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
