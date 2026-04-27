@@ -154,7 +154,7 @@ async function handleFiles(files) {
   showLoading("Uploading & processing PDFs...");
 
   try {
-    const response = await fetch(`${API_BASE}/upload`, {      method: "POST",
+    const response = await fetch(`${API_BASE}/api/upload`, {      method: "POST",
       body: formData,
     });
     const data = await response.json();
@@ -300,7 +300,7 @@ $("#btn-summarize").addEventListener("click", async () => {
 
   showLoading("Generating summary...");
   try {
-    const res = await fetch(`${API_BASE}/summarize`, {
+    const res = await fetch(`${API_BASE}/api/summarize`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ paper_id: paperId, mode: summaryMode }),
@@ -335,7 +335,7 @@ $("#btn-simplify").addEventListener("click", async () => {
 
   showLoading("Simplifying text...");
   try {
-    const res = await fetch(`${API_BASE}/simplify`, {
+    const res = await fetch(`${API_BASE}/api/simplify`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ paper_id: paperId, level }),
@@ -371,7 +371,7 @@ $("#btn-keywords").addEventListener("click", async () => {
 
   showLoading("Extracting keywords...");
   try {
-    const res = await fetch(`${API_BASE}/keywords`, {
+    const res = await fetch(`${API_BASE}/api/keywords`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ paper_id: paperId }),
@@ -424,7 +424,7 @@ $("#btn-sections").addEventListener("click", async () => {
 
   showLoading("Detecting sections...");
   try {
-    const res = await fetch(`${API_BASE}/sections`, {
+    const res = await fetch(`${API_BASE}/api/sections`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ paper_id: paperId }),
@@ -466,7 +466,7 @@ $("#btn-compare").addEventListener("click", async () => {
 
   showLoading("Comparing papers...");
   try {
-    const res = await fetch(`${API_BASE}/compare`, {
+    const res = await fetch(`${API_BASE}/api/compare`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ paper_ids: paperIds }),
@@ -539,7 +539,7 @@ $("#btn-visualize").addEventListener("click", async () => {
 
   showLoading("Generating topic map...");
   try {
-    const res = await fetch(`${API_BASE}/visualize`, {
+    const res = await fetch(`${API_BASE}/api/visualize`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ paper_ids: uploadedPapers.map(p => p.paper_id) }),
@@ -628,7 +628,7 @@ $("#btn-w2v").addEventListener("click", async () => {
 
   showLoading(`Exploring related concepts for "${term}"...`);
   try {
-    const res = await fetch(`${API_BASE}/word2vec`, {
+    const res = await fetch(`${API_BASE}/api/word2vec`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ paper_id: paperId, term }),
@@ -745,7 +745,7 @@ async function sendChatMessage() {
   addTypingIndicator();
 
   try {
-    const res = await fetch(`${API_BASE}/ask`, {
+    const res = await fetch(`${API_BASE}/api/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ paper_id: paperId, question }),
@@ -796,7 +796,7 @@ $("#btn-export").addEventListener("click", async () => {
 
   showLoading("Generating PDF report...");
   try {
-    const res = await fetch(`${API_BASE}/export`, {
+    const res = await fetch(`${API_BASE}/api/export`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ paper_id: paperId }),
